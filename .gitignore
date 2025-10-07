@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+.env
+/prt
+./claude.md

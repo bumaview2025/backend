@@ -12,5 +12,7 @@ public interface GoogleOAuth2UserInfoClient {
             value = "/oauth2/v3/userinfo",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    GoogleInformationResponse getUserInformation(@RequestHeader("Authorization") String accessToken);
+    GoogleInformationResponse getUserInformation(
+            @RequestHeader("Authorization") String accessToken
+    );
 }

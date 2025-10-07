@@ -5,14 +5,17 @@ import bumaview.bumaview.domain.oauth2.infra.client.GoogleOAuth2TokenClient;
 import bumaview.bumaview.domain.oauth2.infra.client.GoogleOAuth2UserInfoClient;
 import bumaview.bumaview.domain.oauth2.presentation.dto.res.GoogleInformationResponse;
 import bumaview.bumaview.domain.oauth2.presentation.dto.res.GoogleTokenResponse;
-import bumaview.bumaview.domain.oauth2.presentation.dto.req.GoogleTokenRequest;
-import bumaview.bumaview.domain.oauth2.presentation.dto.res.UserResponseDto;
 import bumaview.bumaview.domain.user.domain.entity.UserEntity;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.global.properties.GoogleOAuth2ProviderProperties;
+import bumaview.bumaview.global.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,27 +26,32 @@ public class GoogleOAuth2Service {
     private final GoogleOAuth2UserInfoClient googleOAuth2UserInfoClient;
     private final GoogleOAuth2ProviderProperties googleOAuth2ProviderProperties;
     private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
 
     public String generateAuthUrl() {
         return googleOAuth2LinkBuilder.buildUrl();
     }
 
     @Transactional
-    public UserResponseDto authenticateUser(String code) {
+    public String authenticateUser(String code) {
         GoogleTokenResponse tokenResponse = getAccessToken(code);
         GoogleInformationResponse userInfo = getUserInfo(tokenResponse.accessToken());
-        return UserResponseDto.from(saveOrUpdateUser(userInfo));
+        UserEntity user = saveOrUpdateUser(userInfo);
+        return jwtProvider.createAccessToken(user.getUserId().toString());
     }
 
     private GoogleTokenResponse getAccessToken(String code) {
-        GoogleTokenRequest tokenRequest = new GoogleTokenRequest(
-                code,
-                googleOAuth2ProviderProperties.getClientId(),
-                googleOAuth2ProviderProperties.getClientSecret(),
-                googleOAuth2ProviderProperties.getRedirectUrl(),
-                "authorization_code"
+        String rawCode = URLDecoder.decode(code, StandardCharsets.UTF_8);
+        
+        Map<String, String> formData = Map.of(
+                "code", rawCode,
+                "client_id", googleOAuth2ProviderProperties.getClientId(),
+                "client_secret", googleOAuth2ProviderProperties.getClientSecret(),
+                "redirect_uri", googleOAuth2ProviderProperties.getRedirectUri(),
+                "grant_type", googleOAuth2ProviderProperties.getGrantType()
         );
-        return googleOAuth2TokenClient.getAccessToken(tokenRequest);
+        
+        return googleOAuth2TokenClient.getAccessToken(formData);
     }
 
     private GoogleInformationResponse getUserInfo(String accessToken) {
@@ -58,6 +66,7 @@ public class GoogleOAuth2Service {
     private UserEntity createNewUser(GoogleInformationResponse userInfo) {
         UserEntity newUser = UserEntity.builder()
                 .username(userInfo.name())
+                .sub(userInfo.sub())
                 .signupBuilder();
         return userRepository.save(newUser);
     }

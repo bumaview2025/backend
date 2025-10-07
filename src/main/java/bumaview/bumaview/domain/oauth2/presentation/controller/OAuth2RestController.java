@@ -1,7 +1,6 @@
 package bumaview.bumaview.domain.oauth2.presentation.controller;
 
 import bumaview.bumaview.domain.oauth2.application.service.GoogleOAuth2Service;
-import bumaview.bumaview.domain.oauth2.presentation.dto.res.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +18,15 @@ public class OAuth2RestController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> oauth2Login(@RequestParam String code) {
-        UserResponseDto userResponseDto = googleOAuth2Service.authenticateUser(code);
-        return ResponseEntity.ok(userResponseDto);
+    public ResponseEntity<Void> oauth2Login(@RequestParam String code) {
+        String accessToken = googleOAuth2Service.authenticateUser(code);
+        return ResponseEntity.ok()
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<Void> oauth2Logout() {
+        return ResponseEntity.ok().header("Authorization", "Bearer ").build();
     }
 }

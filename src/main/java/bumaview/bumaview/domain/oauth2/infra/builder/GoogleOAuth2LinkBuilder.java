@@ -12,7 +12,7 @@ public class GoogleOAuth2LinkBuilder {
     public String buildUrl() {
         return googleOAuth2ProviderProperties.getBaseUrl() +
                 "?client_id=" + googleOAuth2ProviderProperties.getClientId() +
-                "&redirect_uri=" + googleOAuth2ProviderProperties.getRedirectUrl() +
+                "&redirect_uri=" + googleOAuth2ProviderProperties.getRedirectUri() +
                 "&response_type=code" +
                 "&scope=openid%20email%20profile";
     }

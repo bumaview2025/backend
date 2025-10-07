@@ -1,7 +1,8 @@
 package bumaview.bumaview.global.config;
 
+import bumaview.bumaview.domain.user.infra.repository.UserRepository;
+import bumaview.bumaview.global.security.BumaviewAuthenticationFilter;
 import bumaview.bumaview.global.security.jwt.JwtProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,12 +37,11 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/oauth2/link", "/oauth2/login").permitAll()
-                        .anyRequest().denyAll()
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new NuriAuthenticationFilter(nuriUserDetailsService, jwtProvider), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new NuriExceptionFilter(objectMapper), NuriAuthenticationFilter.class);
+                .addFilterBefore(new BumaviewAuthenticationFilter(jwtProvider, userRepository), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

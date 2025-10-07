@@ -1,6 +1,7 @@
 package bumaview.bumaview.global.security.jwt;
 
 import bumaview.bumaview.global.properties.JwtProperties;
+import bumaview.bumaview.global.security.jwt.exception.InvalidJsonWebTokenException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class JwtProvider {
     @Autowired
     public JwtProvider(JwtProperties jwtProperties) {
         this.secretKey = new SecretKeySpec(
-                jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8),
+                jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8),
                 Jwts.SIG.HS256.key().build().getAlgorithm()
         );
         this.accessExpiration = jwtProperties.getAccessExpiration();
@@ -28,30 +29,39 @@ public class JwtProvider {
     public String createAccessToken(String userId) {
         return Jwts.builder()
                 .subject(userId)
-                .claim("madeBy", "nuri")
+                .claim("madeBy", "bumaview")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String getUserIdFromToken(String token) {
-        return Jwts.parser()
+    public Long getUserIdFromToken(String token) {
+        return Long.parseLong(Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject();
+                .getSubject());
     }
 
     public String getAccessToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidJsonWebTokenException();
+        }
         return jwtVerifyAccessToken(authorizationHeader.substring(7));
     }
 
     private String jwtVerifyAccessToken(String token) {
         try {
+            if (token == null || token.trim().isEmpty()) {
+                throw new InvalidJsonWebTokenException();
+            }
+            
             String madeBy = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("madeBy", String.class);
-            if(!madeBy.equals("nuri")) throw new InvalidJsonWebTokenException();
+            if (madeBy == null || !madeBy.equals("bumaview")) {
+                throw new InvalidJsonWebTokenException();
+            }
             return token;
         } catch (JwtException e) {
             throw new InvalidJsonWebTokenException();

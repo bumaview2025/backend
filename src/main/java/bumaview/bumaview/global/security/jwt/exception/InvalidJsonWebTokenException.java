@@ -1,7 +1,10 @@
 package bumaview.bumaview.global.security.jwt.exception;
 
-public class InvalidJsonWebTokenException extends RuntimeException {
-    public InvalidJsonWebTokenException(String message) {
-        super(message);
+import bumaview.bumaview.global.exception.BumaviewException;
+import org.springframework.http.HttpStatus;
+
+public class InvalidJsonWebTokenException extends BumaviewException {
+    public InvalidJsonWebTokenException() {
+        super(HttpStatus.UNAUTHORIZED, "JWT 토큰이 잘못되었습니다.");
     }
 }
