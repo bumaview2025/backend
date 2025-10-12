@@ -1,5 +1,6 @@
 package bumaview.bumaview.domain.user.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,4 +17,14 @@ public enum DreamJob {
     PUBLIC_OFFICIAL("공무원/공기업");
 
     private final String value;
+
+    @JsonCreator
+    public static DreamJob from(String value) {
+        for (DreamJob job : DreamJob.values()) {
+            if (job.name().equalsIgnoreCase(value) || job.getValue().equals(value)) {
+                return job;
+            }
+        }
+        throw new IllegalArgumentException("Invalid DreamJob value: " + value);
+    }
 }

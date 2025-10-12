@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -43,6 +45,17 @@ public class UserEntity {
     @Column(name = "portfolio", columnDefinition = "TEXT")
     private String portfolio;
 
+    @Column(name = "github_repository", length = 500)
+    private String githubRepository;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "user_meta_data", columnDefinition = "JSON")
+    private String userMetaData;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "github_info", columnDefinition = "JSON")
+    private String githubInfo;
+
     @Column(name = "gender", length = 10)
     private String gender;
 
@@ -79,13 +92,17 @@ public class UserEntity {
     }
 
     @Builder
-    public UserEntity(String username, String password, String githubProfile, DreamJob dreamJob, 
-                     String portfolio, String gender, String sub, String email, String profileImageUrl) {
+    public UserEntity(String username, String password, String githubProfile, DreamJob dreamJob,
+                     String portfolio, String githubRepository, String userMetaData, String githubInfo,
+                     String gender, String sub, String email, String profileImageUrl) {
         this.username = username;
         this.password = password;
         this.githubProfile = githubProfile;
         this.dreamJob = dreamJob;
         this.portfolio = portfolio;
+        this.githubRepository = githubRepository;
+        this.userMetaData = userMetaData;
+        this.githubInfo = githubInfo;
         this.gender = gender;
         this.sub = sub;
         this.email = email;
@@ -105,13 +122,13 @@ public class UserEntity {
         this.isActive = true;
     }
 
-    public void updateProfile(String username, String password, String githubProfile, 
-                             DreamJob dreamJob, String portfolio, String gender) {
+    public void updateProfile(String username, DreamJob dreamJob, String portfolio,
+                             String githubRepository, String userMetaData, String githubInfo) {
         if (username != null) this.username = username;
-        if (password != null) this.password = password;
-        if (githubProfile != null) this.githubProfile = githubProfile;
         if (dreamJob != null) this.dreamJob = dreamJob;
         if (portfolio != null) this.portfolio = portfolio;
-        if (gender != null) this.gender = gender;
+        if (githubRepository != null) this.githubRepository = githubRepository;
+        if (userMetaData != null) this.userMetaData = userMetaData;
+        if (githubInfo != null) this.githubInfo = githubInfo;
     }
 }
