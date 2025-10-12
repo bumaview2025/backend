@@ -12,15 +12,15 @@ import bumaview.bumaview.domain.user.domain.entity.UserEntity;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.domain.interview.exception.InterviewNotFoundException;
 import bumaview.bumaview.domain.interview.exception.PortfolioRequiredException;
+import bumaview.bumaview.domain.portfolio.service.PdfToMarkdownConverter;
+import bumaview.bumaview.global.exception.BumaviewException;
 import bumaview.bumaview.global.security.user.BumaviewUserDetails;
-import bumaview.bumaview.global.service.FileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.Resource;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -31,7 +31,7 @@ public class InterviewService {
     private final InterviewRepository interviewRepository;
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
-    private final FileService fileService;
+    private final PdfToMarkdownConverter pdfConverter;
 
     public InterviewQuestionResponseDto getRandomQuestion(BumaviewUserDetails bumaviewUserDetails) {
         UserEntity user = bumaviewUserDetails.userEntity();
@@ -98,19 +98,27 @@ public class InterviewService {
     @Transactional
     public String uploadPortfolio(BumaviewUserDetails bumaviewUserDetails, MultipartFile file) {
         UserEntity user = bumaviewUserDetails.userEntity();
-        
-        try {
-            String fileName = fileService.uploadPortfolioFile(file, user.getUserId().toString());
-            
-            UserEntity managedUser = userRepository.findById(user.getUserId())
-                    .orElseThrow(() -> new InterviewNotFoundException("사용자를 찾을 수 없습니다."));
-            
-            managedUser.updateProfile(null, null, null, null, fileName, null);
-            
-            return fileName;
-        } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 중 오류가 발생했습니다.", e);
+
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new BumaviewException(HttpStatus.BAD_REQUEST, "파일이 비어있습니다.");
         }
+
+        // Check if PDF file
+        if (!pdfConverter.isPdfFile(file)) {
+            throw new BumaviewException(HttpStatus.BAD_REQUEST, "해당 파일의 형식이 올바르지 않습니다.");
+        }
+
+        // Convert PDF to Markdown
+        String markdownContent = pdfConverter.convertPdfToMarkdown(file);
+
+        // Get managed entity and save
+        UserEntity managedUser = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new InterviewNotFoundException("사용자를 찾을 수 없습니다."));
+
+        managedUser.updateProfile(null, null, null, null, markdownContent, null);
+
+        return file.getOriginalFilename();
     }
 
 }
