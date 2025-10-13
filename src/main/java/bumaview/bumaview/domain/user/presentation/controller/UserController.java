@@ -4,7 +4,6 @@ import bumaview.bumaview.domain.user.application.service.UserService;
 import bumaview.bumaview.domain.user.domain.entity.DreamJob;
 import bumaview.bumaview.domain.user.presentation.dto.UserInfoRequestDto;
 import bumaview.bumaview.domain.user.presentation.dto.UserInfoResponseDto;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,14 +20,21 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/info")
+    public ResponseEntity<UserInfoResponseDto> getUserInfo() {
+        log.info("Getting user info");
+        UserInfoResponseDto response = userService.getUserInfo();
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping(value = "/info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserInfoResponseDto> saveUserInfo(
+    public ResponseEntity<UserInfoResponseDto> saveUserInfoWithFile(
             @RequestParam("username") String username,
             @RequestParam("dream_job") DreamJob dreamJob,
             @RequestParam(value = "portfolio", required = false) MultipartFile portfolio,
             @RequestParam("github_repository") String githubRepository) {
 
-        log.info("Received user info request - username: {}, dreamJob: {}, githubRepository: {}",
+        log.info("Received user info request (multipart) - username: {}, dreamJob: {}, githubRepository: {}",
                 username, dreamJob, githubRepository);
 
         UserInfoRequestDto requestDto = new UserInfoRequestDto(

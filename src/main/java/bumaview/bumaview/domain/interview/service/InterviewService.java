@@ -12,7 +12,7 @@ import bumaview.bumaview.domain.user.domain.entity.UserEntity;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.domain.interview.exception.InterviewNotFoundException;
 import bumaview.bumaview.domain.interview.exception.PortfolioRequiredException;
-import bumaview.bumaview.domain.portfolio.service.PdfToMarkdownConverter;
+import bumaview.bumaview.domain.user.service.PdfToMarkdownConverter;
 import bumaview.bumaview.global.exception.BumaviewException;
 import bumaview.bumaview.global.security.user.BumaviewUserDetails;
 import lombok.RequiredArgsConstructor;

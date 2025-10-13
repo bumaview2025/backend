@@ -1,6 +1,6 @@
 package bumaview.bumaview.domain.user.application.service;
 
-import bumaview.bumaview.domain.portfolio.service.PdfToMarkdownConverter;
+import bumaview.bumaview.domain.user.service.PdfToMarkdownConverter;
 import bumaview.bumaview.domain.user.domain.entity.UserEntity;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.domain.user.presentation.dto.UserInfoRequestDto;
@@ -34,6 +34,37 @@ public class UserService {
     private final ObjectMapper objectMapper;
 
     private static final String METADATA_API_URL = "http://localhost:8000/api/user-metadata";
+
+    @Transactional(readOnly = true)
+    public UserInfoResponseDto getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String principalName = authentication.getName();
+        log.info("Getting user info for: {}", principalName);
+
+        UserEntity user;
+        // Try to parse as userId first
+        try {
+            Long userId = Long.parseLong(principalName);
+            user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        } catch (NumberFormatException e) {
+            // If not a number, try to find by username
+            log.info("Token subject is not a userId, trying to find by username: {}", principalName);
+            user = userRepository.findByUsername(principalName)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        }
+
+        return UserInfoResponseDto.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .dreamJob(user.getDreamJob())
+                .portfolio(user.getPortfolio())
+                .githubRepository(user.getGithubRepository())
+                .userMetaData(parseJson(user.getUserMetaData()))
+                .githubInfo(parseJson(user.getGithubInfo()))
+                .message("사용자 정보를 성공적으로 조회했습니다.")
+                .build();
+    }
 
     @Transactional
     public UserInfoResponseDto saveUserInfo(UserInfoRequestDto requestDto) {

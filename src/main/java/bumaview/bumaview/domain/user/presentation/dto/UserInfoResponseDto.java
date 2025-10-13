@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UserInfoResponseDto {
-
     private Long userId;
     private String username;
     private DreamJob dreamJob;
