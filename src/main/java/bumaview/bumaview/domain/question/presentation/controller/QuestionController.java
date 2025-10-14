@@ -65,8 +65,8 @@ public class QuestionController {
         byte[] fileData = questionService.downloadSampleFile();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
-        headers.setContentDispositionFormData("attachment", "sample.docx");
+        headers.setContentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", "면접질문_샘플.xlsx");
 
         return new ResponseEntity<>(fileData, headers, HttpStatus.OK);
     }
