@@ -1,11 +1,12 @@
 package bumaview.bumaview.domain.user.application.service;
 
-import bumaview.bumaview.domain.user.service.PdfToMarkdownConverter;
 import bumaview.bumaview.domain.user.domain.entity.UserEntity;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.domain.user.presentation.dto.UserInfoRequestDto;
 import bumaview.bumaview.domain.user.presentation.dto.UserInfoResponseDto;
 import bumaview.bumaview.domain.user.presentation.dto.UserMetaDataResponseDto;
+import bumaview.bumaview.domain.user.service.PdfToMarkdownConverter;
+import bumaview.bumaview.global.security.user.BumaviewUserDetails;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,30 +29,15 @@ import java.util.Map;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PdfToMarkdownConverter pdfToMarkdownConverter;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final PdfToMarkdownConverter pdfConverter;
 
     private static final String METADATA_API_URL = "http://localhost:8000/api/user-metadata";
 
     @Transactional(readOnly = true)
-    public UserInfoResponseDto getUserInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String principalName = authentication.getName();
-        log.info("Getting user info for: {}", principalName);
-
-        UserEntity user;
-        // Try to parse as userId first
-        try {
-            Long userId = Long.parseLong(principalName);
-            user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        } catch (NumberFormatException e) {
-            // If not a number, try to find by username
-            log.info("Token subject is not a userId, trying to find by username: {}", principalName);
-            user = userRepository.findByUsername(principalName)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        }
+    public UserInfoResponseDto getUserInfo(BumaviewUserDetails bumaviewUserDetails) {
+        UserEntity user = bumaviewUserDetails.userEntity();
 
         return UserInfoResponseDto.builder()
                 .userId(user.getUserId())
@@ -67,32 +52,17 @@ public class UserService {
     }
 
     @Transactional
-    public UserInfoResponseDto saveUserInfo(UserInfoRequestDto requestDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String principalName = authentication.getName();
-        log.info("Authentication name from token: {}", principalName);
+    public UserInfoResponseDto saveUserInfo(BumaviewUserDetails bumaviewUserDetails, UserInfoRequestDto requestDto) {
+        UserEntity user = bumaviewUserDetails.userEntity();
 
-        UserEntity user;
-        // Try to parse as userId first
-        try {
-            Long userId = Long.parseLong(principalName);
-            user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        } catch (NumberFormatException e) {
-            // If not a number, try to find by username
-            log.info("Token subject is not a userId, trying to find by username: {}", principalName);
-            user = userRepository.findByUsername(principalName)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        }
-
+        MultipartFile portfolioPdf = requestDto.getPortfolio();
         String portfolioMd = null;
-        if (requestDto.getPortfolio() != null && !requestDto.getPortfolio().isEmpty()) {
-            if (pdfToMarkdownConverter.isPdfFile(requestDto.getPortfolio())) {
-                portfolioMd = pdfToMarkdownConverter.convertPdfToMarkdown(requestDto.getPortfolio());
-                log.info("Portfolio converted to Markdown: {} characters", portfolioMd.length());
-            } else {
-                throw new RuntimeException("Portfolio 파일은 PDF 형식이어야 합니다.");
+        
+        if (portfolioPdf != null && !portfolioPdf.isEmpty()) {
+            if (!pdfConverter.isPdfFile(portfolioPdf)) {
+                throw new RuntimeException("해당 파일의 형식이 올바르지 않습니다. PDF 파일을 업로드해주세요.");
             }
+            portfolioMd = pdfConverter.convertPdfToMarkdown(portfolioPdf);
         }
 
         UserMetaDataResponseDto metaDataResponse = callMetaDataApi(portfolioMd, requestDto.getGithubRepository());

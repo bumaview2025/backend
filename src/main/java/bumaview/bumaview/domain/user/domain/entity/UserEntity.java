@@ -32,10 +32,10 @@ public class UserEntity {
     @Column(name = "username", nullable = false, length = 50)
     private String username;
 
-    @Column(name = "password", length = 255)
+    @Column(name = "password")
     private String password;
 
-    @Column(name = "github_profile", length = 255)
+    @Column(name = "github_profile")
     private String githubProfile;
 
     @Enumerated(EnumType.STRING)
@@ -59,7 +59,7 @@ public class UserEntity {
     @Column(name = "gender", length = 10)
     private String gender;
 
-    @Column(name = "sub", unique = true, nullable = false, length = 255)
+    @Column(name = "sub", unique = true, nullable = false)
     private String sub;
 
     @Column(name = "email", length = 100)
