@@ -5,6 +5,7 @@ import bumaview.bumaview.domain.question.presentation.dto.req.QuestionUpdateRequ
 import bumaview.bumaview.domain.question.presentation.dto.res.QuestionResponseDto;
 import bumaview.bumaview.domain.question.service.QuestionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/questions")
 @RequiredArgsConstructor
@@ -38,7 +40,10 @@ public class QuestionController {
 
     @PostMapping
     public ResponseEntity<Long> createQuestion(@RequestBody QuestionCreateRequestDto request) {
+        log.info("Creating question - question: {}, category: {}, company: {}, questionAt: {}",
+                request.question(), request.category(), request.company(), request.questionAt());
         Long questionId = questionService.createQuestion(request);
+        log.info("Question created successfully with id: {}", questionId);
         return ResponseEntity.ok(questionId);
     }
 

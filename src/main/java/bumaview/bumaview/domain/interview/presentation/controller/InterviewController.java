@@ -7,6 +7,7 @@ import bumaview.bumaview.domain.interview.presentation.dto.res.MyAnswerListRespo
 import bumaview.bumaview.domain.interview.service.InterviewService;
 import bumaview.bumaview.global.security.user.BumaviewUserDetails;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/interview")
 @RequiredArgsConstructor
@@ -34,7 +36,10 @@ public class InterviewController {
     public ResponseEntity<InterviewAnswerResponseDto> submitAnswer(
             @AuthenticationPrincipal BumaviewUserDetails bumaviewUserDetails,
             @RequestBody InterviewAnswerRequestDto request) {
+        log.info("Submitting answer - questionId: {}, answer length: {}",
+                request.questionId(), request.answer() != null ? request.answer().length() : 0);
         InterviewAnswerResponseDto answer = interviewService.submitAnswer(bumaviewUserDetails, request);
+        log.info("Answer submitted successfully");
         return ResponseEntity.ok(answer);
     }
 
