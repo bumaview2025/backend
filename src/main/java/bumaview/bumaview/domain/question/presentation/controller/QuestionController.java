@@ -37,9 +37,9 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createQuestion(@RequestBody QuestionCreateRequestDto request) {
-        questionService.createQuestion(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Long> createQuestion(@RequestBody QuestionCreateRequestDto request) {
+        Long questionId = questionService.createQuestion(request);
+        return ResponseEntity.ok(questionId);
     }
 
     @PatchMapping

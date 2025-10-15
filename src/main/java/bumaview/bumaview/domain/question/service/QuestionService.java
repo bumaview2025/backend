@@ -40,15 +40,15 @@ public class QuestionService {
     }
 
     @Transactional
-    public void createQuestion(QuestionCreateRequestDto request) {
+    public Long createQuestion(QuestionCreateRequestDto request) {
         QuestionEntity question = QuestionEntity.builder()
                 .question(request.question())
                 .category(request.category())
                 .company(request.company())
                 .questionAt(request.questionAt())
                 .build();
-        
-        questionRepository.save(question);
+
+        return questionRepository.save(question).getId();
     }
 
     @Transactional
