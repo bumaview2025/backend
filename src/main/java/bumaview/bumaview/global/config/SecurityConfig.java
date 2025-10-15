@@ -1,11 +1,13 @@
 package bumaview.bumaview.global.config;
 
+import bumaview.bumaview.domain.user.domain.entity.Role;
 import bumaview.bumaview.domain.user.infra.repository.UserRepository;
 import bumaview.bumaview.global.security.BumaviewAuthenticationFilter;
 import bumaview.bumaview.global.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -54,7 +56,26 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/login/oauth2/code/**", "/questions/**").permitAll()
+                        // 모두 접근 가능
+                        .requestMatchers(HttpMethod.GET, "/auth/link").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers("/login/oauth2/code/**").permitAll()
+                        
+                        // 사용자, 운영자 모두 접근 가능 (인증 필요)
+                        .requestMatchers(HttpMethod.DELETE, "/auth/logout").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/questions").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/interview/portfolio").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/interview").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/interview").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/interview/answerlist").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        
+                        // 운영자만 접근 가능
+                        .requestMatchers(HttpMethod.GET, "/questions/sample").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/questions/file").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/questions").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PATCH, "/questions").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/questions").hasRole(Role.ADMIN.name())
+                        
                         .anyRequest().authenticated()
                 )
                 .sessionManagement((session) -> session

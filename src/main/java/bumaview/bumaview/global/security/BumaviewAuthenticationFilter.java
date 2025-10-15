@@ -37,7 +37,7 @@ public class BumaviewAuthenticationFilter extends OncePerRequestFilter {
                         .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
 
                 UsernamePasswordAuthenticationToken authenticationToken = 
-                        new UsernamePasswordAuthenticationToken(new BumaviewUserDetails(userEntity), null, null);
+                        new UsernamePasswordAuthenticationToken(new BumaviewUserDetails(userEntity), null, userEntity.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 
             } catch (Exception e) {
