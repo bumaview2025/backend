@@ -67,7 +67,8 @@ public class UserService {
 
         UserMetaDataResponseDto metaDataResponse = callMetaDataApi(portfolioMd, requestDto.getGithubRepository());
 
-        String userMetaDataJson = metaDataResponse.getMetadata();
+        // Markdown 코드 블록 제거 (```json ... ```)
+        String userMetaDataJson = cleanJsonFromMarkdown(metaDataResponse.getMetadata());
         String githubInfoJson = convertToJson(metaDataResponse.getGithubData());
 
         user.updateProfile(
@@ -131,6 +132,27 @@ public class UserService {
             log.error("Failed to convert object to JSON", e);
             throw new RuntimeException("JSON 변환 중 오류가 발생했습니다.", e);
         }
+    }
+
+    private String cleanJsonFromMarkdown(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        // ```json ... ``` 형태의 Markdown 코드 블록 제거
+        String cleaned = text.trim();
+
+        if (cleaned.startsWith("```json")) {
+            cleaned = cleaned.substring(7); // "```json" 제거
+        } else if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(3); // "```" 제거
+        }
+
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 3);
+        }
+
+        return cleaned.trim();
     }
 
     private JsonNode parseJson(String json) {
