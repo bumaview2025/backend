@@ -68,11 +68,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/interview").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .requestMatchers(HttpMethod.POST, "/interview").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/interview/answerlist").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/questions").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         
                         // 운영자만 접근 가능
                         .requestMatchers(HttpMethod.GET, "/questions/sample").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.POST, "/questions/file").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.POST, "/questions").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.PATCH, "/questions").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/questions").hasRole(Role.ADMIN.name())
                         
